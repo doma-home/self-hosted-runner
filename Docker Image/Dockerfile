@@ -1,5 +1,4 @@
 FROM ubuntu:24.04
-
 ARG RUNNER_VERSION="2.317.0"
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -22,15 +21,24 @@ RUN cd /home/docker && mkdir actions-runner && cd actions-runner \
     && curl -o actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz -L https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz \
     && tar xzf actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz
 
-# Change ownership to docker user and install dependencies
-RUN chown -R docker /home/docker && /home/docker/actions-runner/bin/installdependencies.sh
-
-# Copy the start script and make it executable
+# Install dependencies and copy start script
+RUN /home/docker/actions-runner/bin/installdependencies.sh
 COPY start.sh /start.sh
 RUN chmod +x /start.sh
 
-# Switch to docker user
+# Change ownership to docker user
+RUN chown -R docker:docker /home/docker
+
+# Switch to docker user once and stay there
 USER docker
+WORKDIR /home/docker
+
+# Install rustup as the docker user
+RUN curl https://sh.rustup.rs -sSf | \
+    sh -s -- --default-toolchain stable -y
+
+# Add cargo bin to PATH
+ENV PATH="/home/docker/.cargo/bin:${PATH}"
 
 # Define the entrypoint
 ENTRYPOINT ["/start.sh"]
