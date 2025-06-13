@@ -12,7 +12,7 @@ RUN useradd -m docker
 # Install necessary packages including sudo
 RUN apt install -y --no-install-recommends \
     curl build-essential libssl-dev libffi-dev python3 python3-venv python3-dev python3-pip jq \
-    sudo ssh
+    sudo ssh libicu-dev
 
 # Give docker user sudo privileges without password
 RUN echo "docker ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
