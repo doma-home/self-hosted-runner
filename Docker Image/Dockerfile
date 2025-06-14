@@ -11,7 +11,7 @@ RUN useradd -m docker
 # Install necessary packages including sudo
 RUN apt install -y --no-install-recommends \
     curl build-essential libssl-dev libffi-dev python3 python3-venv python3-dev python3-pip jq \
-    sudo ssh libicu-dev
+    sudo ssh libicu-dev zstd
 
 # Give docker user sudo privileges without password
 RUN echo "docker ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
@@ -20,6 +20,11 @@ RUN echo "docker ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 RUN cd /home/docker && mkdir actions-runner && cd actions-runner \
     && curl -o actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz -L https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz \
     && tar xzf actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz
+
+# Modify runner binary to retain custom ACTIONS_RESULTS_URL
+# https://gha-cache-server.falcondev.io/getting-started
+RUN sed -i 's/\x41\x00\x43\x00\x54\x00\x49\x00\x4F\x00\x4E\x00\x53\x00\x5F\x00\x52\x00\x45\x00\x53\x00\x55\x00\x4C\x00\x54\x00\x53\x00\x5F\x00\x55\x00\x52\x00\x4C\x00/\x41\x00\x43\x00\x54\x00\x49\x00\x4F\x00\x4E\x00\x53\x00\x5F\x00\x52\x00\x45\x00\x53\x00\x55\x00\x4C\x00\x54\x00\x53\x00\x5F\x00\x4F\x00\x52\x00\x4C\x00/g' \
+    /home/docker/actions-runner/bin/Runner.Worker.dll
 
 # Install dependencies and copy start script
 RUN /home/docker/actions-runner/bin/installdependencies.sh
